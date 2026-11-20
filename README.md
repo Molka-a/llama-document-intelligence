@@ -4,7 +4,7 @@
 
 A FastAPI service that extracts and cleans document text, then (in progress) uses a small quantised Llama model running locally through [Ollama](https://ollama.com) to fill strict Pydantic schemas. Everything runs on a laptop with 8 GB of RAM: no document ever leaves the machine.
 
-> **Status:** Phases 1–2 complete (extraction, cleaning, schemas, API, 49 tests). Phase 3 (local LLM integration) in progress. See the [roadmap](#roadmap).
+> **Status:** All phases completed . See the [roadmap](#roadmap).
 
 ---
 
@@ -217,10 +217,10 @@ Tests build their PDF and Word files in memory, so no sample documents are neede
 
 - [x] **Phase 1 — Extraction:** PDF and DOCX extraction, text cleaning, robust error handling
 - [x] **Phase 2 — Data model:** Pydantic schemas for CVs and cover letters, typed API responses
-- [ ] **Phase 3 — Local LLM:** Ollama setup, model selection for 8 GB RAM, schema-constrained JSON output
-- [ ] **Phase 4 — Intelligent processing:** document classification, structured extraction endpoint, handling of missing or uncertain fields
-- [ ] **Phase 5 — Evaluation:** labelled sample set, per-field precision / recall / F1, latency, comparison of small models
-- [ ] **Phase 6 — Finalisation:** logging, error handling, Docker, CI
+- [x] **Phase 3 — Local LLM:** Ollama setup, model selection for 8 GB RAM, schema-constrained JSON output
+- [x] **Phase 4 — Intelligent processing:** document classification, structured extraction endpoint, handling of missing or uncertain fields
+- [x] **Phase 5 — Evaluation:** labelled sample set, per-field precision / recall / F1, latency, comparison of small models
+- [x] **Phase 6 — Finalisation:** logging, error handling, Docker, CI
 
 ---
 
