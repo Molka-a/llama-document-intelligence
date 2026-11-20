@@ -5,6 +5,7 @@ The model is forced to answer in the JSON structure of a Pydantic schema
 If validation fails, the errors are sent back to the model once so it can
 correct its JSON.
 """
+
 import copy
 import json
 import os
@@ -77,6 +78,8 @@ def list_local_models() -> list[str]:
         response = _client.list()
     except (ConnectionError, httpx.ConnectError) as exc:
         raise LLMUnavailableError(f"Ollama is not running at {OLLAMA_HOST}") from exc
+    except httpx.TimeoutException as exc:
+        raise LLMUnavailableError(f"Ollama did not answer at {OLLAMA_HOST}") from exc
     return [m.model for m in response.models]
 
 
@@ -195,6 +198,7 @@ def _chat(model: str, messages: list[dict], json_schema: dict,
         output_tokens=last.eval_count or 0,
         done_reason=last.done_reason,
     )
+
 
 def _require_all_fields(json_schema: dict) -> dict:
     """Mark every property as required in the schema sent to the model.
