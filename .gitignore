@@ -221,3 +221,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# LLM outputs and real documents (personal data)
+data/outputs/
+data/samples/*.pdf
+data/samples/*.docx

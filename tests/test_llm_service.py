@@ -32,12 +32,15 @@ class Person(BaseModel):
         return value
 
 
-def fake_response(content: str):
-    return SimpleNamespace(
-        message=SimpleNamespace(content=content),
-        prompt_eval_count=50,
-        eval_count=20,
-    )
+def fake_stream(content: str, done_reason: str = "stop"):
+    """Mimic Ollama streaming: several chunks, stats on the last one."""
+    middle = len(content) // 2
+    return [
+        SimpleNamespace(message=SimpleNamespace(content=content[:middle]),
+                        prompt_eval_count=None, eval_count=None, done_reason=None),
+        SimpleNamespace(message=SimpleNamespace(content=content[middle:]),
+                        prompt_eval_count=50, eval_count=20, done_reason=done_reason),
+    ]
 
 
 class FakeClient:
@@ -52,7 +55,9 @@ class FakeClient:
         answer = self.answers.pop(0)
         if isinstance(answer, Exception):
             raise answer
-        return fake_response(answer)
+        if isinstance(answer, tuple):          # (content, done_reason)
+            return fake_stream(*answer)
+        return fake_stream(answer)
 
 
 @pytest.fixture
@@ -80,9 +85,11 @@ def test_schema_and_options_are_sent(use_fake):
     generate_structured("Extract.", "text", Person)
 
     call = client.calls[0]
-    assert call["format"] == Person.model_json_schema()
+    assert call["format"]["properties"] == Person.model_json_schema()["properties"]
     assert call["options"]["temperature"] == 0
     assert call["options"]["num_ctx"] >= 4096
+    assert call["options"]["num_predict"] > 0
+    assert call["stream"] is True
 
 
 def test_invalid_json_is_corrected_on_retry(use_fake):
@@ -116,7 +123,7 @@ def test_ollama_not_running(use_fake):
 def test_timeout(use_fake):
     use_fake(httpx.ReadTimeout("too slow"))
 
-    with pytest.raises(LLMUnavailableError, match="did not answer"):
+    with pytest.raises(LLMUnavailableError, match="sent nothing"):
         generate_structured("Extract.", "text", Person)
 
 
@@ -135,3 +142,40 @@ def test_schema_is_written_into_system_prompt(use_fake):
     system = client.calls[0]["messages"][0]["content"]
     assert system.startswith("Extract the person.")
     assert '"city"' in system and "JSON schema" in system
+
+
+def test_streamed_tokens_are_passed_to_callback(use_fake):
+    use_fake('{"name": "Molka Amara", "city": "Rabat"}')
+    received = []
+
+    result = generate_structured("Extract.", "text", Person, on_token=received.append)
+
+    assert "".join(received) == '{"name": "Molka Amara", "city": "Rabat"}'
+    assert result.prompt_tokens == 50 and result.output_tokens == 20
+
+
+def test_runaway_output_stops_without_retry(use_fake):
+    client = use_fake(('{"name": "A", "city": "B B B B', "length"))
+
+    with pytest.raises(LLMOutputError, match="token output limit"):
+        generate_structured("Extract.", "text", Person, max_retries=1)
+    assert len(client.calls) == 1     # no second attempt
+
+
+def test_every_field_is_required_for_the_model():
+    """Optional fields must still be written by the model (at least as null)."""
+    from typing import Optional
+
+    class Job(BaseModel):
+        title: str
+        start_date: Optional[str] = None
+
+    class Cv(BaseModel):
+        name: Optional[str] = None
+        jobs: list[Job] = []
+
+    strict = llm_service._require_all_fields(Cv.model_json_schema())
+
+    assert strict["required"] == ["name", "jobs"]
+    assert strict["$defs"]["Job"]["required"] == ["title", "start_date"]
+    assert "required" not in Cv.model_json_schema()      # original untouched

@@ -113,9 +113,28 @@ class ContactInfo(BaseSchema):
     linkedin: str | None = Field(None, description="LinkedIn profile URL")
     github: str | None = Field(None, description="GitHub profile URL")
     website: str | None = Field(None, description="Personal website or portfolio URL")
-    
+
+    @field_validator("full_name")
+    @classmethod
+    def fix_all_caps_name(cls, v):
+        """'MOLKA AMARA' (common CV style) -> 'Molka Amara'. Mixed case is kept."""
+        if v and v.isupper():
+            return v.title()
+        return v
+
+
+    @field_validator("location")
+    @classmethod
+    def keep_first_location_segment(cls, v):
+        """'Rabat, Morocco · relocating to Berlin' -> 'Rabat, Morocco'."""
+        if not v:
+            return None
+        return re.split(r"\s+[·|•]\s+", v)[0].strip()
+
+
     @field_validator("email")
     @classmethod
+
     def validate_email(cls, value: str | None) -> str | None:
         if not value:
             return None
@@ -143,5 +162,5 @@ class ContactInfo(BaseSchema):
 
 
 class Language(BaseSchema):
-    name: str
-    level: str | None = None   # free text as written: "native", "fluent", "B2"...
+    name: str = Field(description="Language name, e.g. 'Spanish'")
+    level: str | None = Field(None, description="Level as written, e.g. 'native', 'fluent', 'B2'")

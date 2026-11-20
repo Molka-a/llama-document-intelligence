@@ -5,10 +5,11 @@ The model is forced to answer in the JSON structure of a Pydantic schema
 If validation fails, the errors are sent back to the model once so it can
 correct its JSON.
 """
-
+import copy
 import json
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
@@ -19,7 +20,8 @@ from pydantic import BaseModel, ValidationError
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434")
 DEFAULT_MODEL = os.getenv("LLM_MODEL", "llama3.2:3b")
 NUM_CTX = int(os.getenv("LLM_NUM_CTX", "8192"))      # context window in tokens
-TIMEOUT_S = float(os.getenv("LLM_TIMEOUT", "600"))   # a full CV can take minutes on CPU
+TIMEOUT_S = float(os.getenv("LLM_TIMEOUT", "600"))   # max wait between two streamed chunks
+MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "3072"))  # stops runaway generation
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -43,7 +45,8 @@ class LLMModelNotFoundError(LLMError):
 
 
 class LLMOutputError(LLMError):
-    """The model kept returning JSON that does not match the schema."""
+    """The model kept returning JSON that does not match the schema,
+    or its output hit the token limit (usually a repetition loop)."""
 
 
 # ---------------------------------------------------------------------------
@@ -83,15 +86,19 @@ def generate_structured(
     schema: type[T],
     model: str = DEFAULT_MODEL,
     max_retries: int = 1,
+    on_token: Callable[[str], None] | None = None,
 ) -> LLMResult[T]:
     """Ask the model for JSON matching `schema` and return it validated.
+
+    `on_token`, if given, receives each piece of text as it is generated
+    (useful to watch progress live).
 
     Raises:
         LLMUnavailableError: Ollama is not reachable or timed out.
         LLMModelNotFoundError: the model is not pulled.
         LLMOutputError: still invalid after `max_retries` corrections.
     """
-    json_schema = schema.model_json_schema()
+    json_schema = _require_all_fields(schema.model_json_schema())
     messages = [
         {"role": "system", "content": _with_schema(system_prompt, json_schema)},
         {"role": "user", "content": user_prompt},
@@ -100,16 +107,22 @@ def generate_structured(
     last_error: ValidationError | None = None
 
     for attempt in range(1, max_retries + 2):
-        response = _chat(model, messages, json_schema)
-        content = response.message.content or ""
+        reply = _chat(model, messages, json_schema, on_token)
+
+        if reply.done_reason == "length":
+            # Retrying would only waste the same time again
+            raise LLMOutputError(
+                f"Model '{model}' hit the {MAX_OUTPUT_TOKENS}-token output limit: "
+                "it is probably repeating itself."
+            )
 
         try:
-            data = schema.model_validate_json(content)
+            data = schema.model_validate_json(reply.content)
         except ValidationError as exc:
             last_error = exc
             # Show the model its own answer and what was wrong with it
             messages += [
-                {"role": "assistant", "content": content},
+                {"role": "assistant", "content": reply.content},
                 {"role": "user", "content": _correction_prompt(exc)},
             ]
             continue
@@ -119,8 +132,8 @@ def generate_structured(
             model=model,
             attempts=attempt,
             duration_s=round(time.perf_counter() - start, 2),
-            prompt_tokens=response.prompt_eval_count or 0,
-            output_tokens=response.eval_count or 0,
+            prompt_tokens=reply.prompt_tokens,
+            output_tokens=reply.output_tokens,
         )
 
     raise LLMOutputError(
@@ -132,27 +145,77 @@ def generate_structured(
 # Internals
 # ---------------------------------------------------------------------------
 
-def _chat(model: str, messages: list[dict], json_schema: dict):
+@dataclass
+class _Reply:
+    content: str
+    prompt_tokens: int
+    output_tokens: int
+    done_reason: str | None   # "stop" = finished normally, "length" = hit the token limit
+
+
+def _chat(model: str, messages: list[dict], json_schema: dict,
+          on_token: Callable[[str], None] | None = None) -> _Reply:
+    """Stream the answer: the timeout then applies between chunks, not to the
+    whole generation, and progress can be shown while the model writes."""
     try:
-        return _client.chat(
+        stream = _client.chat(
             model=model,
             messages=messages,
             format=json_schema,                  # constrain output to the schema
             options={
                 "temperature": 0,                # deterministic: same input, same output
                 "num_ctx": NUM_CTX,              # room for a full CV + instructions
+                "num_predict": MAX_OUTPUT_TOKENS,
             },
+            stream=True,
         )
+        parts, last = [], None
+        for chunk in stream:
+            piece = chunk.message.content or ""
+            parts.append(piece)
+            if on_token and piece:
+                on_token(piece)
+            last = chunk
     except (ConnectionError, httpx.ConnectError) as exc:
         raise LLMUnavailableError(f"Ollama is not running at {OLLAMA_HOST}") from exc
     except httpx.TimeoutException as exc:
-        raise LLMUnavailableError(f"Ollama did not answer within {TIMEOUT_S:.0f} s") from exc
+        raise LLMUnavailableError(f"Ollama sent nothing for {TIMEOUT_S:.0f} s") from exc
     except ollama.ResponseError as exc:
         if exc.status_code == 404:
             raise LLMModelNotFoundError(
                 f"Model '{model}' is not installed. Run: ollama pull {model}"
             ) from exc
         raise LLMError(f"Ollama error: {exc.error}") from exc
+
+    if last is None:
+        raise LLMError("Ollama returned an empty response")
+    return _Reply(
+        content="".join(parts),
+        prompt_tokens=last.prompt_eval_count or 0,
+        output_tokens=last.eval_count or 0,
+        done_reason=last.done_reason,
+    )
+
+def _require_all_fields(json_schema: dict) -> dict:
+    """Mark every property as required in the schema sent to the model.
+
+    Ollama turns the schema into a grammar in which optional properties can
+    be skipped, and small models skip a lot (dates, location...). Requiring
+    every key forces the model to write each one, if only as null. Pydantic
+    still validates with the real, lenient schema afterwards.
+    """
+    def visit(node):
+        if isinstance(node, dict):
+            if isinstance(node.get("properties"), dict):
+                node["required"] = list(node["properties"])
+            for value in node.values():
+                visit(value)
+        elif isinstance(node, list):
+            for item in node:
+                visit(item)
+        return node
+
+    return visit(copy.deepcopy(json_schema))
 
 
 def _with_schema(system_prompt: str, json_schema: dict) -> str:
