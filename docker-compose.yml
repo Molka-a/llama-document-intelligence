@@ -1,0 +1,34 @@
+# Full stack: the API and Ollama, each in its own container.
+#
+#   docker compose up -d --build
+#   docker compose exec ollama ollama pull llama3.2:3b     # first time only
+#   open http://localhost:8000/docs
+#
+# Already running Ollama on your PC? Start only the API and point it to the host:
+#   docker compose up -d --build api   (after setting OLLAMA_HOST below to
+#   http://host.docker.internal:11434 and removing depends_on)
+
+services:
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama-models:/root/.ollama        # downloaded models survive restarts
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+
+  api:
+    build: .
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      LLM_MODEL: llama3.2:3b
+      LLM_TIMEOUT: "600"
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+volumes:
+  ollama-models:

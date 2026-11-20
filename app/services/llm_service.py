@@ -8,6 +8,7 @@ correct its JSON.
 
 import copy
 import json
+import logging
 import os
 import time
 from collections.abc import Callable
@@ -25,6 +26,8 @@ TIMEOUT_S = float(os.getenv("LLM_TIMEOUT", "600"))   # max wait between two stre
 MAX_OUTPUT_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "3072"))  # stops runaway generation
 
 T = TypeVar("T", bound=BaseModel)
+
+logger = logging.getLogger("app.llm")
 
 _client = ollama.Client(host=OLLAMA_HOST, timeout=TIMEOUT_S)
 
@@ -114,6 +117,7 @@ def generate_structured(
 
         if reply.done_reason == "length":
             # Retrying would only waste the same time again
+            logger.warning("%s hit the %d-token limit (probable loop)", model, MAX_OUTPUT_TOKENS)
             raise LLMOutputError(
                 f"Model '{model}' hit the {MAX_OUTPUT_TOKENS}-token output limit: "
                 "it is probably repeating itself."
@@ -123,6 +127,8 @@ def generate_structured(
             data = schema.model_validate_json(reply.content)
         except ValidationError as exc:
             last_error = exc
+            logger.warning("%s returned invalid %s (attempt %d): %d errors",
+                           model, schema.__name__, attempt, exc.error_count())
             # Show the model its own answer and what was wrong with it
             messages += [
                 {"role": "assistant", "content": reply.content},
@@ -130,7 +136,7 @@ def generate_structured(
             ]
             continue
 
-        return LLMResult(
+        result = LLMResult(
             data=data,
             model=model,
             attempts=attempt,
@@ -138,6 +144,10 @@ def generate_structured(
             prompt_tokens=reply.prompt_tokens,
             output_tokens=reply.output_tokens,
         )
+        logger.info("%s -> %s in %.1f s (%d prompt + %d output tokens, attempt %d)",
+                    model, schema.__name__, result.duration_s, result.prompt_tokens,
+                    result.output_tokens, attempt)
+        return result
 
     raise LLMOutputError(
         f"Model '{model}' returned invalid JSON after {max_retries + 1} attempts: {last_error}"

@@ -1,0 +1,14 @@
+@"
+# Keep the image small and free of personal data
+.venv/
+.git/
+.github/
+**/__pycache__/
+.pytest_cache/
+tests/
+evaluation/
+scripts/
+data/
+*.md
+.env
+"@ | Set-Content -Path .dockerignore -Encoding ascii
