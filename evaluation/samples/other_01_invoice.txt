@@ -1,0 +1,6 @@
+INVOICE No. 2026-0457
+Date: 12 February 2026
+Bill to: Hafenblick Logistics GmbH, Hamburg
+Description: Data platform consulting, 10 days
+Amount due: 9,500.00 EUR
+Payment terms: 30 days

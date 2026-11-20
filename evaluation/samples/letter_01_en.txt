@@ -1,0 +1,17 @@
+Lukas Brandt
+Hamburg, Germany | lukas.brandt@example.com | +49 170 555 0192
+
+Hamburg, 3 March 2026
+
+Application for the position of Senior Data Engineer (Ref. DE-2026-114)
+
+Dear Ms. Keller,
+
+I am writing to apply for the Senior Data Engineer role at Hafenblick Logistics. Over the past four years I have built batch and streaming pipelines with Apache Spark, Airflow and Kafka, most recently migrating 40 nightly jobs to Airflow at Nordlicht Commerce.
+
+Your plan to move shipment tracking to real-time data is exactly the kind of problem I enjoy: it needs reliable streaming, careful data modelling with dbt and close work with operations teams.
+
+I can start on 1 June 2026, after my three-month notice period.
+
+Kind regards,
+Lukas Brandt

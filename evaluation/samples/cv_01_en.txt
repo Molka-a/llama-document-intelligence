@@ -1,0 +1,29 @@
+LUKAS BRANDT
+Data Engineer | Python, Spark, Airflow
+Hamburg, Germany | +49 170 555 0192 | lukas.brandt@example.com | github.com/lbrandt-data
+
+SUMMARY
+Data engineer with four years of experience building batch and streaming pipelines for e-commerce analytics.
+
+SKILLS
+Programming: Python, SQL, Scala
+Data tools: Apache Spark, Airflow, Kafka, dbt
+Cloud: AWS, Docker, Terraform
+
+EXPERIENCE
+Senior Data Engineer - Nordlicht Commerce GmbH, Hamburg
+Mar 2023 - Present
+- Migrated 40 nightly batch jobs to Airflow, cutting failed runs by 60%.
+- Built a Kafka streaming pipeline processing 3M order events per day.
+
+Data Engineer - Elbtal Analytics, Bremen
+Sep 2020 - Feb 2023
+- Designed dbt models for the finance data warehouse used by 120 analysts.
+
+EDUCATION
+MSc Computer Science - University of Hamburg
+2018 - 2020
+- Thesis: Incremental view maintenance for streaming joins (grade 1.3)
+
+LANGUAGES
+German (native), English (C1), Spanish (A2)

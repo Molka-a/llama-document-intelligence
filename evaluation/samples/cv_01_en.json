@@ -1,0 +1,46 @@
+{
+  "document_type": "cv",
+  "gold": {
+    "contact": {
+      "full_name": "Lukas Brandt",
+      "email": "lukas.brandt@example.com",
+      "phone": "+49 170 555 0192",
+      "location": "Hamburg, Germany",
+      "github": "github.com/lbrandt-data"
+    },
+    "headline": "Data Engineer | Python, Spark, Airflow",
+    "summary": "Data engineer with four years of experience building batch and streaming pipelines for e-commerce analytics.",
+    "skills": [
+      {"category": "Programming", "skills": ["Python", "SQL", "Scala"]},
+      {"category": "Data tools", "skills": ["Apache Spark", "Airflow", "Kafka", "dbt"]},
+      {"category": "Cloud", "skills": ["AWS", "Docker", "Terraform"]}
+    ],
+    "experience": [
+      {
+        "title": "Senior Data Engineer", "company": "Nordlicht Commerce GmbH", "location": "Hamburg",
+        "start_date": "Mar 2023", "end_date": "Present",
+        "achievements": [
+          "Migrated 40 nightly batch jobs to Airflow, cutting failed runs by 60%.",
+          "Built a Kafka streaming pipeline processing 3M order events per day."
+        ]
+      },
+      {
+        "title": "Data Engineer", "company": "Elbtal Analytics", "location": "Bremen",
+        "start_date": "Sep 2020", "end_date": "Feb 2023",
+        "achievements": ["Designed dbt models for the finance data warehouse used by 120 analysts."]
+      }
+    ],
+    "education": [
+      {
+        "degree": "MSc Computer Science", "institution": "University of Hamburg",
+        "start_date": "2018", "end_date": "2020",
+        "details": ["Thesis: Incremental view maintenance for streaming joins (grade 1.3)"]
+      }
+    ],
+    "languages": [
+      {"name": "German", "level": "native"},
+      {"name": "English", "level": "C1"},
+      {"name": "Spanish", "level": "A2"}
+    ]
+  }
+}

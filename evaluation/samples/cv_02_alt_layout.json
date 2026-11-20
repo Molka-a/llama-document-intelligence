@@ -1,0 +1,43 @@
+{
+  "document_type": "cv",
+  "gold": {
+    "contact": {
+      "full_name": "Sofia Marchetti",
+      "email": "sofia.marchetti@example.org",
+      "phone": "+39 345 678 9012",
+      "location": "Milan, Italy",
+      "linkedin": "linkedin.com/in/sofia-marchetti"
+    },
+    "headline": "Product Data Analyst",
+    "summary": "Analyst who turns product usage data into decisions for growth and retention teams.",
+    "skills": [
+      {"category": "Analytics", "skills": ["SQL", "Python", "Looker", "A/B testing"]},
+      {"category": "Tools", "skills": ["Git", "Jira"]}
+    ],
+    "experience": [
+      {
+        "title": "Product Data Analyst", "company": "Lumen Apps S.r.l.", "location": "Milan",
+        "start_date": "01/2022", "end_date": "Present",
+        "achievements": [
+          "Defined the retention KPI framework adopted by 4 product squads.",
+          "Automated weekly reporting in Python, saving 6 hours per week."
+        ]
+      },
+      {
+        "title": "Junior Data Analyst", "company": "Banca Verdi", "location": "Turin",
+        "employment_type": "Internship", "start_date": "06/2021", "end_date": "12/2021",
+        "achievements": ["Cleaned and documented 15 credit-risk datasets."]
+      }
+    ],
+    "education": [
+      {"degree": "MSc Management Engineering", "institution": "Politecnico di Milano",
+       "start_date": "2019", "end_date": "2021"}
+    ],
+    "languages": [
+      {"name": "Italian", "level": "native"},
+      {"name": "English", "level": "fluent"},
+      {"name": "French", "level": "intermediate"}
+    ],
+    "certifications": ["Google Data Analytics Certificate"]
+  }
+}

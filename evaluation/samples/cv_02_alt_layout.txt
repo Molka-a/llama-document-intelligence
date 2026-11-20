@@ -1,0 +1,31 @@
+Sofia Marchetti
+Product Data Analyst
+
+Milan, Italy · sofia.marchetti@example.org · +39 345 678 9012 · linkedin.com/in/sofia-marchetti
+
+ABOUT
+Analyst who turns product usage data into decisions for growth and retention teams.
+
+PROFESSIONAL EXPERIENCE
+Lumen Apps S.r.l. | Product Data Analyst | Milan
+01/2022 - today
+- Defined the retention KPI framework adopted by 4 product squads.
+- Automated weekly reporting in Python, saving 6 hours per week.
+
+Banca Verdi | Junior Data Analyst (Internship) | Turin
+06/2021 - 12/2021
+- Cleaned and documented 15 credit-risk datasets.
+
+EDUCATION
+Politecnico di Milano - MSc Management Engineering
+2019 - 2021
+
+SKILLS
+Analytics: SQL, Python, Looker, A/B testing
+Tools: Git, Jira
+
+LANGUAGES
+Italian (native), English (fluent), French (intermediate)
+
+CERTIFICATIONS
+Google Data Analytics Certificate

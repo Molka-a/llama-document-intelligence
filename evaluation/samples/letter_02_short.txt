@@ -1,0 +1,13 @@
+Sofia Marchetti
+sofia.marchetti@example.org
+
+Dear Hiring Team,
+
+I would like to apply for the Product Analyst position at Brightloop. At Lumen Apps I defined the retention KPI framework used by four product squads and automated our weekly reporting in Python and SQL.
+
+Brightloop's focus on experimentation appeals to me: I have run A/B tests end to end, from design to analysis in Looker.
+
+I am available from September 2026.
+
+Best regards,
+Sofia Marchetti

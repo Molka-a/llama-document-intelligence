@@ -2,8 +2,13 @@
 
 import re
 from typing import Annotated
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
+_NULL_STRINGS = {"null", "none", "n/a", "na", "unknown", "not specified", "not mentioned"}
+
+
+def _is_null_string(value) -> bool:
+    return isinstance(value, str) and value.strip().lower() in _NULL_STRINGS
 
 
 class BaseSchema(BaseModel):
@@ -11,9 +16,24 @@ class BaseSchema(BaseModel):
 
     - Strips spaces around all strings.
     - Ignores unknown keys (an LLM often adds extra fields).
+    - Turns the string "null" (a common small-model mistake) into a real null.
     """
     model_config = ConfigDict(str_strip_whitespace=True, extra="ignore")
 
+    @model_validator(mode="before")
+    @classmethod
+    def null_strings_to_none(cls, data):
+        """Runs on the raw input of every schema (nested schemas run their own)."""
+        if not isinstance(data, dict):
+            return data
+        cleaned = {}
+        for key, value in data.items():
+            if _is_null_string(value):
+                value = None
+            elif isinstance(value, list):
+                value = [item for item in value if not _is_null_string(item)]
+            cleaned[key] = value
+        return cleaned
 
 # ---------------------------------------------------------------------------
 # Dates

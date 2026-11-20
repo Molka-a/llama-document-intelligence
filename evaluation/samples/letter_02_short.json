@@ -1,0 +1,12 @@
+{
+  "document_type": "cover_letter",
+  "gold": {
+    "sender": {"full_name": "Sofia Marchetti", "email": "sofia.marchetti@example.org"},
+    "recipient_name": "Hiring Team",
+    "company": "Brightloop",
+    "position": "Product Analyst",
+    "key_skills": ["Python", "SQL", "A/B tests", "Looker"],
+    "motivation_summary": "Attracted by Brightloop's focus on experimentation.",
+    "availability": "September 2026"
+  }
+}

@@ -226,3 +226,8 @@ __marimo__/
 data/outputs/
 data/samples/*.pdf
 data/samples/*.docx
+
+
+
+evaluation/private/
+evaluation/results/

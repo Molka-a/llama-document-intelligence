@@ -15,6 +15,7 @@ from app.schemas.cover_letter import CoverLetterDocument
 from app.schemas.cv import CVDocument
 from app.services.classifier import Classification, classify_document
 from app.services.llm_service import DEFAULT_MODEL, LLMResult, generate_structured
+from app.services.postprocess import fix_cover_letter, fix_cv
 from app.services.quality_service import review
 
 RequestedType = Literal["auto", "cv", "cover_letter"]
@@ -32,13 +33,15 @@ def extract_cv(
 ) -> LLMResult[CVDocument]:
     """Extract a validated CVDocument from the plain text of a CV."""
     _require_text(text)
-    return generate_structured(
+    result = generate_structured(
         system_prompt=CV_SYSTEM_PROMPT,
         user_prompt=build_cv_user_prompt(text),
         schema=CVDocument,
         model=model,
         on_token=on_token,
     )
+    fix_cv(result.data, text)
+    return result
 
 
 def extract_cover_letter(
@@ -48,13 +51,15 @@ def extract_cover_letter(
 ) -> LLMResult[CoverLetterDocument]:
     """Extract a validated CoverLetterDocument from the plain text of a letter."""
     _require_text(text)
-    return generate_structured(
+    result = generate_structured(
         system_prompt=COVER_LETTER_SYSTEM_PROMPT,
         user_prompt=build_cover_letter_user_prompt(text),
         schema=CoverLetterDocument,
         model=model,
         on_token=on_token,
     )
+    fix_cover_letter(result.data, text)
+    return result
 
 
 _EXTRACTORS = {
