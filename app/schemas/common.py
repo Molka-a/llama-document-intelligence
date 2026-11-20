@@ -3,7 +3,7 @@
 import re
 from typing import Annotated
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, field_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
 
 
 class BaseSchema(BaseModel):
@@ -104,14 +104,16 @@ _PHONE_RE = re.compile(r"^\+?[\d\s().-]+$")
 
 
 class ContactInfo(BaseSchema):
-    full_name: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    location: str | None = None
-    linkedin: str | None = None
-    github: str | None = None
-    website: str | None = None
-
+    full_name: str | None = Field(
+        None, description="The person's full name, usually the first line of a CV, e.g. 'Jane Doe'")
+    email: str | None = Field(None, description="Email address")
+    phone: str | None = Field(None, description="Phone number, as written")
+    location: str | None = Field(
+        None, description="Where the person lives: city and country, e.g. 'Berlin, Germany'")
+    linkedin: str | None = Field(None, description="LinkedIn profile URL")
+    github: str | None = Field(None, description="GitHub profile URL")
+    website: str | None = Field(None, description="Personal website or portfolio URL")
+    
     @field_validator("email")
     @classmethod
     def validate_email(cls, value: str | None) -> str | None:
